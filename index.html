@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Game Red Ball</title>
+<style>
+  :root{
+    --rojo:#e5341f;
+    --rojo-osc:#a3220f;
+    --azul:#1f6fe5;
+    --azul-osc:#123f8a;
+    --tinta:#12100e;
+    --tinta2:#1c1916;
+    --hueso:#f2ece1;
+    --hueso-op:#f2ece1cc;
+    --linea:#3a332b;
+    --amarillo:#f0b429;
+    --radio:14px;
+    --safe-t:env(safe-area-inset-top,0px);
+    --safe-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #2a1610 0%, transparent 60%),
+      radial-gradient(1000px 600px at 100% 0%, #0e1c33 0%, transparent 55%),
+      var(--tinta);
+    color:var(--hueso);
+    font-family: "Futura PT", "Century Gothic", "Trebuchet MS", -apple-system, sans-serif;
+    padding-top:var(--safe-t);
+    padding-bottom:var(--safe-b);
+    overflow-x:hidden;
+  }
+  a{color:inherit;}
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    padding:26px 20px 18px;
+    text-align:center;
+    position:relative;
+  }
+  .marca{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+  .marca .esferas{display:flex;}
+  .esfera{
+    width:30px;height:30px;border-radius:50%;
+    margin-left:-10px;
+    box-shadow: inset -4px -4px 8px rgba(0,0,0,.35), inset 3px 3px 5px rgba(255,255,255,.4);
+    border:2px solid var(--tinta);
+  }
+  .esfera.r{background:radial-gradient(circle at 32% 28%, #ff8a70, var(--rojo) 55%, var(--rojo-osc) 100%); margin-left:0;}
+  .esfera.b{background:radial-gradient(circle at 32% 28%, #7fb2ff, var(--azul) 55%, var(--azul-osc) 100%);}
+  h1.titulo{
+    font-size:clamp(28px,7vw,44px);
+    margin:0;
+    line-height:.95;
+    text-transform:uppercase;
+  }
+  h1.titulo .peq{
+    display:block;
+    font-size:.34em;
+    letter-spacing:.24em;
+    color:var(--amarillo);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  p.sub{
+    max-width:520px;
+    margin:14px auto 0;
+    color:var(--hueso-op);
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .chip-bar{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:16px;
+  }
+  .chip{
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--linea);
+    background:var(--tinta2);
+    color:var(--hueso-op);
+  }
+
+  /* ---------- MODO PATATA BANNER ---------- */
+  .patata-bar{
+    max-width:640px;
+    margin:20px auto 0;
+    padding:12px 16px;
+    background:var(--tinta2);
+    border:1px solid var(--linea);
+    border-radius:var(--radio);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .patata-bar strong{font-size:13.5px;}
+  .patata-bar span{font-size:12px;color:var(--hueso-op);display:block;margin-top:2px;}
+  .switch{
+    position:relative;
+    width:46px;height:26px;
+    flex:0 0 auto;
+    background:#3a332b;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+  }
+  .switch::after{
+    content:"";
+    position:absolute;
+    top:3px;left:3px;
+    width:20px;height:20px;
+    background:var(--hueso);
+    border-radius:50%;
+    transition:transform .18s ease;
+  }
+  .switch.on{background:var(--amarillo);}
+  .switch.on::after{transform:translateX(20px);}
+
+  /* ---------- GRID DE JUEGOS ---------- */
+  main{max-width:960px;margin:0 auto;padding:26px 16px 60px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:14px;
+  }
+  .carta{
+    background:var(--tinta2);
+    border:1px solid var(--linea);
+    border-radius:var(--radio);
+    overflow:hidden;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    transition:transform .12s ease, border-color .12s ease;
+    padding:0;
+  }
+  .carta:active{transform:scale(.96);}
+  .carta:hover{border-color:#5c5040;}
+  .miniatura{
+    aspect-ratio:1/1;
+    width:100%;
+    position:relative;
+    overflow:hidden;
+  }
+  .miniatura svg{width:100%;height:100%;display:block;}
+  .badge-vol{
+    position:absolute;
+    top:8px;right:8px;
+    background:rgba(18,16,14,.75);
+    border:1px solid var(--linea);
+    color:var(--amarillo);
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:999px;
+  }
+  .info-carta{padding:10px 12px 12px;}
+  .info-carta h3{
+    margin:0 0 3px;
+    font-size:14px;
+    line-height:1.25;
+  }
+  .info-carta p{
+    margin:0;
+    font-size:11.5px;
+    color:var(--hueso-op);
+  }
+
+  /* ---------- REPRODUCTOR ---------- */
+  .reproductor{
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:1000;
+    display:none;
+    flex-direction:column;
+  }
+  .reproductor.abierto{display:flex;}
+  .barra-juego{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:calc(10px + var(--safe-t)) 12px 10px;
+    background:var(--tinta2);
+    border-bottom:1px solid var(--linea);
+    flex:0 0 auto;
+  }
+  .barra-juego h2{
+    font-size:14px;
+    margin:0;
+    flex:1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .btn-icono{
+    background:#2a251f;
+    border:1px solid var(--linea);
+    color:var(--hueso);
+    width:36px;height:36px;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .btn-icono:active{background:var(--rojo-osc);}
+  #escenario-wrap{
+    flex:1;
+    position:relative;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    touch-action:none;
+  }
+  #ruffle-host{
+    width:100%;
+    height:100%;
+    position:relative;
+  }
+  #ruffle-host object, #ruffle-host embed, #ruffle-host ruffle-player{
+    width:100% !important;
+    height:100% !important;
+  }
+  .pantalla-carga{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;
+    background:#000;
+    z-index:2;
+  }
+  .spinner{
+    width:38px;height:38px;
+    border-radius:50%;
+    border:4px solid #2a251f;
+    border-top-color:var(--rojo);
+    animation:girar .8s linear infinite;
+  }
+  @keyframes girar{to{transform:rotate(360deg);}}
+  .pantalla-carga p{font-size:12.5px;color:var(--hueso-op);margin:0;}
+
+  /* ---------- CONTROLES MOVILES ---------- */
+  .controles{
+    position:absolute;
+    inset:0;
+    z-index:5;
+    pointer-events:none;
+    padding-bottom:calc(14px + var(--safe-b));
+    display:none;
+  }
+  .controles.activo{display:block;}
+  .dpad{
+    position:absolute;
+    left:16px;bottom:calc(14px + var(--safe-b));
+    display:grid;
+    grid-template-columns:56px 56px;
+    grid-template-rows:56px;
+    gap:10px;
+    pointer-events:auto;
+  }
+  .tecla{
+    width:56px;height:56px;
+    background:rgba(242,236,225,.14);
+    border:2px solid rgba(242,236,225,.35);
+    border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;
+    color:var(--hueso);
+    -webkit-user-select:none;user-select:none;
+  }
+  .tecla.activa{background:rgba(240,180,41,.5);border-color:var(--amarillo);}
+  .btn-salto{
+    position:absolute;
+    right:20px;bottom:calc(14px + var(--safe-b));
+    width:78px;height:78px;
+    border-radius:50%;
+    background:rgba(229,52,31,.32);
+    border:2px solid rgba(255,140,120,.6);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:.05em;
+    color:var(--hueso);
+    pointer-events:auto;
+    -webkit-user-select:none;user-select:none;
+    text-transform:uppercase;
+  }
+  .btn-salto.activa{background:rgba(229,52,31,.75);}
+
+  /* ---------- WALKTHROUGH LINK ---------- */
+  .franja-walk{
+    flex:0 0 auto;
+    background:var(--tinta2);
+    border-top:1px solid var(--linea);
+    padding:10px 14px calc(10px + var(--safe-b));
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .franja-walk a{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--hueso);
+    text-decoration:none;
+    background:#2a251f;
+    border:1px solid var(--linea);
+    padding:8px 12px;
+    border-radius:10px;
+  }
+  .franja-walk .yt{
+    width:18px;height:13px;
+    background:#ff0000;
+    border-radius:4px;
+    position:relative;
+    flex:0 0 auto;
+  }
+  .franja-walk .yt::after{
+    content:"";
+    position:absolute;
+    top:3px;left:6px;
+    border-left:6px solid #fff;
+    border-top:3.5px solid transparent;
+    border-bottom:3.5px solid transparent;
+  }
+  .franja-walk span.hint{font-size:11px;color:var(--hueso-op);}
+
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:11.5px;
+    color:#7a7266;
+  }
+
+  @media (min-width:720px){
+    .dpad{transform:scale(1.05);}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">
+    <span class="esferas"><span class="esfera r"></span><span class="esfera b"></span></span>
+    <h1 class="titulo"><span class="peq">Colección Tournament Edition</span>Game Red Ball</h1>
+  </div>
+  <p class="sub">10 juegos clásicos de Red Ball corriendo con el emulador Ruffle, directo en tu navegador. Sin instalar nada.</p>
+  <div class="chip-bar">
+    <span class="chip">🕹️ Controles táctiles</span>
+    <span class="chip">⛶ Pantalla completa</span>
+    <span class="chip">🥔 Modo patata</span>
+  </div>
+
+  <div class="patata-bar">
+    <div style="flex:1;">
+      <strong>Modo patata (optimización extrema)</strong>
+      <span>Baja resolución y desactiva sonido para que corra fluido en equipos lentos.</span>
+    </div>
+    <button class="switch" id="switchPatata" aria-label="Activar modo patata"></button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>Los juegos son propiedad de sus respectivos autores (FDG Entertainment). Uso personal, sin fines de lucro.</footer>
+
+<!-- ---------- REPRODUCTOR ---------- -->
+<div class="reproductor" id="reproductor">
+  <div class="barra-juego">
+    <button class="btn-icono" id="btnCerrar" aria-label="Cerrar">✕</button>
+    <h2 id="tituloJuego">Cargando…</h2>
+    <button class="btn-icono" id="btnControles" aria-label="Mostrar/ocultar controles">🕹️</button>
+    <button class="btn-icono" id="btnFull" aria-label="Pantalla completa">⛶</button>
+  </div>
+
+  <div id="escenario-wrap">
+    <div id="ruffle-host"></div>
+
+    <div class="pantalla-carga" id="pantallaCarga">
+      <div class="spinner"></div>
+      <p id="textoCarga">Cargando juego…</p>
+    </div>
+
+    <div class="controles activo" id="controles">
+      <div class="dpad">
+        <div></div><div></div>
+        <div class="tecla" data-tecla="ArrowLeft" style="grid-column:1;grid-row:1;">◀</div>
+        <div class="tecla" data-tecla="ArrowRight" style="grid-column:2;grid-row:1;">▶</div>
+      </div>
+      <div class="btn-salto" data-tecla="ArrowUp">SALTAR</div>
+    </div>
+  </div>
+
+  <div class="franja-walk">
+    <a id="linkWalk" href="#" target="_blank" rel="noopener">
+      <span class="yt"></span> Ver walkthrough en YouTube
+    </a>
+    <span class="hint">Se abre en una pestaña nueva</span>
+  </div>
+</div>
+
+<script>
+/* ================= DATOS DE LOS JUEGOS ================= */
+const juegos = [
+  {
+    id:"rb1",
+    archivo:"games/Red_Ball_-_Tournament_Edition.swf",
+    nombre:"Red Ball",
+    vol:"1ª entrega",
+    desc:"El clásico original, 17 niveles",
+    color1:"#ff7a5c", color2:"#a3220f",
+    busqueda:"Red Ball 1 walkthrough gameplay"
+  },
+  {
+    id:"rb17",
+    archivo:"games/RedBall_17Levels.swf",
+    nombre:"Red Ball 17 Levels",
+    vol:"Edición extendida",
+    desc:"Versión con 17 niveles extra",
+    color1:"#ff9a7c", color2:"#c23515",
+    busqueda:"Red Ball 17 levels walkthrough gameplay"
+  },
+  {
+    id:"rb2",
+    archivo:"games/Red_Ball_2_-_Tournament_Edition.swf",
+    nombre:"Red Ball 2",
+    vol:"2ª entrega",
+    desc:"Nuevos obstáculos y trampas",
+    color1:"#ff6a4a", color2:"#8f1c0c",
+    busqueda:"Red Ball 2 walkthrough gameplay"
+  },
+  {
+    id:"rb3",
+    archivo:"games/Red_Ball_3_-_Tournament_Edition.swf",
+    nombre:"Red Ball 3",
+    vol:"3ª entrega",
+    desc:"Más niveles, más dificultad",
+    color1:"#ff5a3a", color2:"#7a1608",
+    busqueda:"Red Ball 3 walkthrough gameplay"
+  },
+  {
+    id:"rb4v1",
+    archivo:"games/Red_Ball_4_Vol_1_-_Tournament_Edition.swf",
+    nombre:"Red Ball 4",
+    vol:"Volumen 1",
+    desc:"75 niveles, física mejorada",
+    color1:"#e5341f", color2:"#6b1206",
+    busqueda:"Red Ball 4 Volume 1 walkthrough gameplay"
+  },
+  {
+    id:"rb4v2",
+    archivo:"games/Red_Ball_4_Vol_2_-_Tournament_Edition.swf",
+    nombre:"Red Ball 4",
+    vol:"Volumen 2",
+    desc:"Nuevos escenarios y jefes",
+    color1:"#e5341f", color2:"#5c0f05",
+    busqueda:"Red Ball 4 Volume 2 walkthrough gameplay"
+  },
+  {
+    id:"rb4v3",
+    archivo:"games/Red_Ball_4_Vol_3_-_Tournament_Edition.swf",
+    nombre:"Red Ball 4",
+    vol:"Volumen 3",
+    desc:"El desafío final de la saga",
+    color1:"#e5341f", color2:"#4d0c04",
+    busqueda:"Red Ball 4 Volume 3 walkthrough gameplay"
+  },
+  {
+    id:"rrbb1",
+    archivo:"games/Red___Blue_Balls_-_Tournament_Edition.swf",
+    nombre:"Red & Blue Balls",
+    vol:"1ª entrega",
+    desc:"Cooperativo: controla ambas bolas",
+    color1:"#1f6fe5", color2:"#e5341f",
+    busqueda:"Red and Blue Balls 1 walkthrough gameplay"
+  },
+  {
+    id:"rrbb2",
+    archivo:"games/Red___Blue_Balls_2_-_Tournament_Edition.swf",
+    nombre:"Red & Blue Balls 2",
+    vol:"2ª entrega",
+    desc:"Puzzles duales más complejos",
+    color1:"#1f6fe5", color2:"#e5341f",
+    busqueda:"Red and Blue Balls 2 walkthrough gameplay"
+  },
+  {
+    id:"rrbb3",
+    archivo:"games/Red___Blue_Balls_3_-_Tournament_Edition.swf",
+    nombre:"Red & Blue Balls 3",
+    vol:"3ª entrega",
+    desc:"La aventura dual definitiva",
+    color1:"#1f6fe5", color2:"#e5341f",
+    busqueda:"Red and Blue Balls 3 walkthrough gameplay"
+  },
+];
+
+/* ================= RENDER DE TARJETAS ================= */
+const grid = document.getElementById('grid');
+
+function svgMiniatura(j){
+  // Ilustración propia (no usa arte con copyright): dos esferas estilizadas sobre un paisaje simple.
+  const esferaExtra = j.color2 !== j.color1 && j.id.startsWith('rrbb')
+    ? `<circle cx="150" cy="118" r="30" fill="url(#g2_${j.id})" stroke="#12100e" stroke-width="4"/>`
+    : '';
+  return `
+  <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bg_${j.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#241f19"/>
+        <stop offset="1" stop-color="#15120e"/>
+      </linearGradient>
+      <radialGradient id="g1_${j.id}" cx="35%" cy="30%" r="70%">
+        <stop offset="0" stop-color="${j.color1}" stop-opacity=".95"/>
+        <stop offset="1" stop-color="${j.color2}"/>
+      </radialGradient>
+      <radialGradient id="g2_${j.id}" cx="35%" cy="30%" r="70%">
+        <stop offset="0" stop-color="#7fb2ff"/>
+        <stop offset="1" stop-color="#123f8a"/>
+      </radialGradient>
+    </defs>
+    <rect width="220" height="220" fill="url(#bg_${j.id})"/>
+    <path d="M0 165 Q55 140 110 160 T220 150 V220 H0 Z" fill="#0000" />
+    <path d="M0 175 Q60 150 120 170 T220 158 V220 H0 Z" fill="#221c15"/>
+    <path d="M0 190 Q70 172 130 188 T220 178 V220 H0 Z" fill="#171310"/>
+    <circle cx="100" cy="95" r="46" fill="url(#g1_${j.id})" stroke="#12100e" stroke-width="4"/>
+    <circle cx="84" cy="80" r="12" fill="#fff" opacity=".35"/>
+    ${esferaExtra}
+  </svg>`;
+}
+
+function crearTarjeta(j, idx){
+  const btn = document.createElement('button');
+  btn.className = 'carta';
+  btn.innerHTML = `
+    <div class="miniatura">
+      ${svgMiniatura(j)}
+      <span class="badge-vol">${j.vol}</span>
+    </div>
+    <div class="info-carta">
+      <h3>${j.nombre}</h3>
+      <p>${j.desc}</p>
+    </div>
+  `;
+  btn.addEventListener('click', () => abrirJuego(idx));
+  return btn;
+}
+
+juegos.forEach((j, idx) => grid.appendChild(crearTarjeta(j, idx)));
+
+/* ================= MODO PATATA ================= */
+let modoPatata = false;
+const switchPatata = document.getElementById('switchPatata');
+switchPatata.addEventListener('click', () => {
+  modoPatata = !modoPatata;
+  switchPatata.classList.toggle('on', modoPatata);
+});
+
+/* ================= REPRODUCTOR ================= */
+const reproductor = document.getElementById('reproductor');
+const ruffleHost = document.getElementById('ruffle-host');
+const pantallaCarga = document.getElementById('pantallaCarga');
+const textoCarga = document.getElementById('textoCarga');
+const tituloJuego = document.getElementById('tituloJuego');
+const linkWalk = document.getElementById('linkWalk');
+const controlesEl = document.getElementById('controles');
+
+let rufflePlayer = null;
+let ruffleApiLista = false;
+let ruffleApiPromesa = null;
+
+function cargarRuffle(){
+  if (ruffleApiPromesa) return ruffleApiPromesa;
+  ruffleApiPromesa = new Promise((resolve, reject) => {
+    if (window.RufflePlayer) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = "https://unpkg.com/@ruffle-rs/ruffle@nightly/ruffle.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("No se pudo cargar Ruffle. Revisa tu conexión."));
+    document.head.appendChild(s);
+  });
+  return ruffleApiPromesa;
+}
+
+async function abrirJuego(idx){
+  const j = juegos[idx];
+  reproductor.classList.add('abierto');
+  tituloJuego.textContent = `${j.nombre} — ${j.vol}`;
+  linkWalk.href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(j.busqueda);
+  pantallaCarga.style.display = 'flex';
+  textoCarga.textContent = 'Cargando emulador Ruffle…';
+
+  // limpiar host anterior
+  ruffleHost.innerHTML = '';
+
+  try{
+    await cargarRuffle();
+  }catch(e){
+    textoCarga.textContent = 'Sin conexión: no se pudo cargar el emulador Ruffle.';
+    return;
+  }
+
+  textoCarga.textContent = `Cargando ${j.nombre}…`;
+
+  const ruffleApi = window.RufflePlayer.newest();
+  const player = ruffleApi.createPlayer();
+  player.id = "swf-" + j.id;
+  ruffleHost.appendChild(player);
+
+  const config = {
+    autoplay: "on",
+    unmuteOverlay: "hidden",
+    letterbox: "on",
+    backgroundColor: "#000000",
+    splashScreen: false,
+  };
+
+  if (modoPatata){
+    // OPTIMIZACION EXTREMA: baja la calidad de render y limita FPS
+    config.quality = "low";
+    config.volume = 0;
+    config.maxExecutionDuration = { secs: 30, nanos: 0 };
+  } else {
+    config.quality = "medium";
+    config.volume = 1;
+  }
+
+  try{
+    await player.load({ url: j.archivo, ...config });
+    pantallaCarga.style.display = 'none';
+  }catch(err){
+    textoCarga.textContent = 'Error al cargar el archivo .swf: ' + (err && err.message ? err.message : err);
+  }
+
+  rufflePlayer = player;
+}
+
+document.getElementById('btnCerrar').addEventListener('click', () => {
+  reproductor.classList.remove('abierto');
+  if (rufflePlayer) {
+    try{ rufflePlayer.remove(); }catch(e){}
+    rufflePlayer = null;
+  }
+  ruffleHost.innerHTML = '';
+  if (document.fullscreenElement) document.exitFullscreen();
+});
+
+/* ---------- PANTALLA COMPLETA ---------- */
+document.getElementById('btnFull').addEventListener('click', () => {
+  const el = document.getElementById('escenario-wrap');
+  if (!document.fullscreenElement){
+    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+/* ---------- MOSTRAR/OCULTAR CONTROLES ---------- */
+document.getElementById('btnControles').addEventListener('click', () => {
+  controlesEl.classList.toggle('activo');
+});
+
+/* ================= CONTROLES TACTILES -> TECLADO ================= */
+function despacharTecla(tipo, codigo){
+  const evento = new KeyboardEvent(tipo, {
+    key: codigo, code: codigo, bubbles: true, cancelable: true
+  });
+  const objetivo = (rufflePlayer && rufflePlayer.querySelector && rufflePlayer.querySelector('embed')) || document;
+  document.dispatchEvent(evento);
+  window.dispatchEvent(evento);
+}
+
+document.querySelectorAll('[data-tecla]').forEach(el => {
+  const codigo = el.getAttribute('data-tecla');
+
+  const presionar = (e) => {
+    e.preventDefault();
+    el.classList.add('activa');
+    despacharTecla('keydown', codigo);
+  };
+  const soltar = (e) => {
+    e.preventDefault();
+    el.classList.remove('activa');
+    despacharTecla('keyup', codigo);
+  };
+
+  el.addEventListener('touchstart', presionar, {passive:false});
+  el.addEventListener('touchend', soltar, {passive:false});
+  el.addEventListener('touchcancel', soltar, {passive:false});
+  el.addEventListener('mousedown', presionar);
+  el.addEventListener('mouseup', soltar);
+  el.addEventListener('mouseleave', soltar);
+});
+</script>
+
+</body>
+</html>
